@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: steven-ai
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3307/steven_ai?serverTimezone=Asia/Shanghai&useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&tinyInt1isBit=false&allowPublicKeyRetrieval=true&allowMultiQueries=true&useServerPrepStmts=false
+    username: steven
+    password: steven123
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: deepseek-r1:7b
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: qwen-max-latest
+      embedding:
+        options:
+          model: text-embedding-v3
+          dimensions: 1024
+    mcp:
+      client:
+        type: ASYNC
+        request-timeout: 60s
+        # 其余可选项（按需）：
+        # name: steven-ai
+        # version: 1.0.0
+        # initialized: true
+        # root-change-notification: true
+amap:
+  api:
+    key: ${AMAP_API_KEY:${AMAP_MCP_KEY:}}
+
+
+logging:
+  level:
+    org.springframework.ai: debug
+    com.steven.ai: debug
