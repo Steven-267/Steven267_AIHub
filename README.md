@@ -139,18 +139,18 @@ java -jar target/steven-ai-0.0.1-SNAPSHOT.jar
 - CORS：开发阶段已放开，生产请按域名收敛
 
 ### 演示截图
-## 首页
+ 首页
 <img width="1920" height="1016" alt="image" src="https://github.com/user-attachments/assets/6810d145-ecaf-44ac-bfeb-cb54044246ec" />
-## AI多模态机器人
+ AI多模态机器人
 语音识别
 <img width="1920" height="1055" alt="image" src="https://github.com/user-attachments/assets/ea0767bd-9070-4b9c-bd9d-a914e04623bf" />
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/a0a83c11-cf83-49d0-a8fe-955d35627424" />
 图片识别
 <img width="1920" height="1055" alt="image" src="https://github.com/user-attachments/assets/51d9335d-58d7-466e-9e6c-39a8d5b5a4b7" />
-## 旅游向导 Agent
+ 旅游向导 Agent
 <img width="1920" height="1055" alt="image" src="https://github.com/user-attachments/assets/44370c81-e59b-4464-ada7-4385f5ca10ab" />
 <img width="1920" height="1055" alt="image" src="https://github.com/user-attachments/assets/ff4b7436-0d80-468d-8fc8-cfb2290a81a8" />
-## chatPdf
+ chatPdf
 <img width="1920" height="1055" alt="image" src="https://github.com/user-attachments/assets/df0316bd-ca37-45c9-b02d-1e7bf132e3ec" />
 <img width="1920" height="1055" alt="image" src="https://github.com/user-attachments/assets/5e4f7fb8-bb15-48a4-acf2-796088956e5a" />
 
