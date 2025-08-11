@@ -1,5 +1,5 @@
 ### steven-ai（后端服务）
-
+前端链接：https://github.com/Steven-267/spring-ai-protal
 基于 Spring Boot 3 与 Spring AI 的后端服务，提供聊天、PDF 问答、客服与旅游向导 Agent 能力，并内置会话历史与向量化检索（RAG）。
 
 - **框架/依赖**：Spring Boot 3.4.x、Spring AI 1.0.0-M6、MyBatis-Plus、MySQL 8、Reactor
