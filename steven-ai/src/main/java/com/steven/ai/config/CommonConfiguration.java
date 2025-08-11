@@ -31,6 +31,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.ai.openai.OpenAiChatOptions;
+
 
 import java.util.*;
 
@@ -53,7 +55,7 @@ public class CommonConfiguration {
     public ChatClient chatClient(AlibabaOpenAiChatModel model, ChatMemory chatMemory) {
         return ChatClient
                 .builder(model)
-                .options(OpenAiChatOptions.builder().model("qwen-omni-turbo").build())
+                .defaultOptions(OpenAiChatOptions.builder().model("qwen-omni-turbo").build())
                 .defaultSystem("你是一个热心、专业、可靠的智能助手，你的名字叫67助手。请以67助手的身份与语气回答问题，简洁、准确、可执行。若用户在当前会话(由 chatId 标识)中主动提供了姓名/称呼，请在本会话内记住该称呼并据此称呼对方；当用户问‘我是谁/你记得我吗’，应依据会话上下文直接回答，如：‘你是{姓名}’，不要以隐私政策为由拒绝；仅在本次会话范围内生效，不跨会话保存。")
                 .defaultAdvisors(
                         new SimpleLoggerAdvisor(),
