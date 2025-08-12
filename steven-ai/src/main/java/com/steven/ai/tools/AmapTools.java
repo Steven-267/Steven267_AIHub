@@ -186,4 +186,175 @@ public class AmapTools {
             return "地理编码数据解析失败：" + e.getMessage();
         }
     }
+     @Tool(description = "驾车路线规划，入参 origin/destination（lng,lat），可选 strategy(0-19)")
+    public String maps_direction_driving(
+            @ToolParam(description = "起点，经纬度 lng,lat") String origin,
+            @ToolParam(description = "终点，经纬度 lng,lat") String destination,
+            @ToolParam(description = "策略，可选，默认0 https://lbs.amap.com/api/webservice/guide/api/newroute#driving", required = false) String strategy
+    ) {
+        if (apiKey == null || apiKey.isBlank()) {
+            return "未配置高德API Key。请设置环境变量 AMAP_API_KEY，或在 application.yaml 配置 amap.api.key";
+        }
+        String s = (strategy == null || strategy.isBlank()) ? "0" : strategy.trim();
+        String json = http.get()
+                .uri(uri -> uri.path("/v3/direction/driving")
+                        .queryParam("origin", origin)
+                        .queryParam("destination", destination)
+                        .queryParam("strategy", s)
+                        .queryParam("extensions", "base")
+                        .queryParam("key", apiKey)
+                        .build())
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        try {
+            JsonNode root = objectMapper.readTree(json);
+            log.debug("Amap driving raw: {}", json);
+            if (!"1".equals(root.path("status").asText())) {
+                return "驾车路线规划失败：" + root.path("info").asText();
+            }
+            JsonNode path = root.path("route").path("paths");
+            if (!path.isArray() || path.size() == 0) {
+                return "未找到合适的驾车路线";
+            }
+            JsonNode best = path.get(0);
+            String distanceM = best.path("distance").asText("0");
+            String durationS = best.path("duration").asText("0");
+            double km = 0.0;
+            try { km = Integer.parseInt(distanceM) / 1000.0; } catch (Exception ignore) {}
+            int minutes = 0;
+            try { minutes = (int) Math.round(Integer.parseInt(durationS) / 60.0); } catch (Exception ignore) {}
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("驾车：约 %.1f 公里，约 %d 分钟。\n", km, minutes));
+            JsonNode steps = best.path("steps");
+            if (steps.isArray() && steps.size() > 0) {
+                int limit = Math.min(5, steps.size());
+                for (int i = 0; i < limit; i++) {
+                    JsonNode st = steps.get(i);
+                    String road = st.path("road").asText("");
+                    String instruction = st.path("instruction").asText("");
+                    sb.append(String.format("%d. %s %s\n", i + 1, road, instruction));
+                }
+                if (steps.size() > limit) sb.append("...");
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return "驾车路线数据解析失败：" + e.getMessage();
+        }
+    }
+
+    @Tool(description = "步行路线规划，入参 origin/destination（lng,lat）")
+    public String maps_direction_walking(
+            @ToolParam(description = "起点，经纬度 lng,lat") String origin,
+            @ToolParam(description = "终点，经纬度 lng,lat") String destination
+    ) {
+        if (apiKey == null || apiKey.isBlank()) {
+            return "未配置高德API Key。请设置环境变量 AMAP_API_KEY，或在 application.yaml 配置 amap.api.key";
+        }
+        String json = http.get()
+                .uri(uri -> uri.path("/v3/direction/walking")
+                        .queryParam("origin", origin)
+                        .queryParam("destination", destination)
+                        .queryParam("key", apiKey)
+                        .build())
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        try {
+            JsonNode root = objectMapper.readTree(json);
+            log.debug("Amap walking raw: {}", json);
+            if (!"1".equals(root.path("status").asText())) {
+                return "步行路线规划失败：" + root.path("info").asText();
+            }
+            JsonNode path = root.path("route").path("paths");
+            if (!path.isArray() || path.size() == 0) {
+                return "未找到合适的步行路线";
+            }
+            JsonNode best = path.get(0);
+            String distanceM = best.path("distance").asText("0");
+            String durationS = best.path("duration").asText("0");
+            double km = 0.0;
+            try { km = Integer.parseInt(distanceM) / 1000.0; } catch (Exception ignore) {}
+            int minutes = 0;
+            try { minutes = (int) Math.round(Integer.parseInt(durationS) / 60.0); } catch (Exception ignore) {}
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("步行：约 %.1f 公里，约 %d 分钟。\n", km, minutes));
+            JsonNode steps = best.path("steps");
+            if (steps.isArray() && steps.size() > 0) {
+                int limit = Math.min(6, steps.size());
+                for (int i = 0; i < limit; i++) {
+                    JsonNode st = steps.get(i);
+                    String instruction = st.path("instruction").asText("");
+                    sb.append(String.format("%d. %s\n", i + 1, instruction));
+                }
+                if (steps.size() > limit) sb.append("...");
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return "步行路线数据解析失败：" + e.getMessage();
+        }
+    }
+
+    @Tool(description = "公交路线规划（城市内/跨城），入参 origin/destination（lng,lat），city(城市名或adcode)")
+    public String maps_direction_transit(
+            @ToolParam(description = "起点，经纬度 lng,lat") String origin,
+            @ToolParam(description = "终点，经纬度 lng,lat") String destination,
+            @ToolParam(description = "城市（名或adcode），如：北京 或 110000") String city,
+            @ToolParam(description = "策略，可选，0最快 1少换乘 2少步行 3不坐地铁", required = false) String strategy
+    ) {
+        if (apiKey == null || apiKey.isBlank()) {
+            return "未配置高德API Key。请设置环境变量 AMAP_API_KEY，或在 application.yaml 配置 amap.api.key";
+        }
+        String s = (strategy == null || strategy.isBlank()) ? "0" : strategy.trim();
+        String json = http.get()
+                .uri(uri -> uri.path("/v3/direction/transit/integrated")
+                        .queryParam("origin", origin)
+                        .queryParam("destination", destination)
+                        .queryParam("city", city)
+                        .queryParam("strategy", s)
+                        .queryParam("key", apiKey)
+                        .build())
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        try {
+            JsonNode root = objectMapper.readTree(json);
+            log.debug("Amap transit raw: {}", json);
+            if (!"1".equals(root.path("status").asText())) {
+                return "公交路线规划失败：" + root.path("info").asText();
+            }
+            JsonNode transits = root.path("route").path("transits");
+            if (!transits.isArray() || transits.size() == 0) {
+                return "未找到合适的公交路线";
+            }
+            JsonNode best = transits.get(0);
+            String durationS = best.path("duration").asText("0");
+            int minutes = 0;
+            try { minutes = (int) Math.round(Integer.parseInt(durationS) / 60.0); } catch (Exception ignore) {}
+            String cost = best.path("cost").asText("");
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("公交：约 %d 分钟，票价约 %s 元。\n", minutes, cost.isEmpty() ? "-" : cost));
+            JsonNode segments = best.path("segments");
+            if (segments.isArray() && segments.size() > 0) {
+                int limit = Math.min(6, segments.size());
+                for (int i = 0; i < limit; i++) {
+                    JsonNode seg = segments.get(i);
+                    JsonNode bus = seg.path("bus").path("buslines");
+                    if (bus.isArray() && bus.size() > 0) {
+                        String name = bus.get(0).path("name").asText("");
+                        sb.append(String.format("%d. 乘坐 %s\n", i + 1, name));
+                    } else {
+                        String walk = seg.path("walking").path("distance").asText("");
+                        if (!walk.isEmpty()) {
+                            sb.append(String.format("%d. 步行 %s 米\n", i + 1, walk));
+                        }
+                    }
+                }
+                if (segments.size() > limit) sb.append("...");
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return "公交路线数据解析失败：" + e.getMessage();
+        }
+    }
 }
